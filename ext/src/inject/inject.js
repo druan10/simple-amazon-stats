@@ -23,6 +23,7 @@ chrome.extension.sendMessage({}, function(response) {
 		var numOfStatItems = 0;
 		var currentCol = "";
 		var numOfStatRows = 0;
+		var regexPattern = "";
 
 		targetDiv.innerHTML = `
 			<table id = "simpleStatsTable"> 
@@ -77,7 +78,13 @@ chrome.extension.sendMessage({}, function(response) {
 			var possibleWeights = [];
 			
 			if (idExists("detail-bullets")) {
+				relevantDiv = document.getElementById("detail-bullets");
 				console.log("found details");
+				regexPattern = "(\d{1,}\.\d{,2})(?:\spounds)";
+				if (RegExp.test(String(relevantDiv))) {
+					console.log("found weight in pounds");
+				}
+
 			}
 		}
 
