@@ -3,21 +3,19 @@ chrome.extension.sendMessage({}, function(response) {
 	if (document.readyState === "complete") {
 		clearInterval(readyStateCheckInterval);
 
-
 		// ----------------------------------------------------------
 		// This part of the script triggers when page is done loading
-
 		console.log("Amazon Data Simplifier Loaded!");
 
-		var targetDivName = "detail-ilm_div2";
+		// This script will replace the div with the following id, if it doesn't exist, the program will quit
+		var targetDivName = "detail-ilm_div";
 
-		// Div to be replaced with stats table
 		if (!idExists(targetDivName)) {
-			console.log("Shit don't exist fam");
+			console.log("Exiting, couldn't find div to replace!");
+			die();
 		}
 
 		var targetDiv = document.getElementById(targetDivName);
-
 		
 		// Default Values
 		var shippingWeight = 0.01;
@@ -43,11 +41,7 @@ chrome.extension.sendMessage({}, function(response) {
 		addStatItem("<b>HEY</b>");
 
 		//TODO, create get weight function
-		// getWeightInPounds();
-
-
-
-
+		getWeightInPounds();
 
 		// ----------------------------------------------------------
 		// Functions for scraping and presenting data
@@ -77,11 +71,14 @@ chrome.extension.sendMessage({}, function(response) {
 					`;
 		}
 
-		function getWeightInPounds() {
+		//TODO
+		function getWeightInPounds() { //https://www.amazon.com/gp/product/B00KR0202E
 			var relevantDiv = "";
-			var dataArray = [];
-			relevantDiv = document.getElementById("detail-bullets");
-			console.log(relevantDiv);
+			var possibleWeights = [];
+			
+			if (idExists("detail-bullets")) {
+				console.log("found details");
+			}
 		}
 
 		function convertOuncesToPounds () {
