@@ -1,3 +1,14 @@
 /**
  * Place your custom CSS styles here.
  **/
+#simpleStatsDiv {
+   width:90%;
+   float:left;
+}
+#leftColumn {
+
+   width:50%;
+}
+#rightColumn {
+   width:50%;
+}
