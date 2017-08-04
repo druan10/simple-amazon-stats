@@ -1,3 +1,5 @@
+var oldLocation = window.location.href;
+
 chrome.extension.sendMessage({}, function(response) {
 	var readyStateCheckInterval = setInterval(function() {
 	if (document.readyState === "complete") {
@@ -7,6 +9,9 @@ chrome.extension.sendMessage({}, function(response) {
 		// This part of the script triggers when page is done loading
 		console.log("Amazon Data Simplifier Loaded!");
 
+		console.log(oldLocation);
+
+		console.log(window.location.href);
 		// This script will replace the div with the following id, if it doesn't exist, the program will quit
 		var targetDivName = "detail-ilm_div";
 
@@ -38,8 +43,8 @@ chrome.extension.sendMessage({}, function(response) {
 		document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
 
 		var simpleStatsTable = document.getElementById("simpleStatsTable");
-
-		addStatItem("<b>HEY</b>");
+		
+		//checkIsAsinMerge();
 
 		//TODO, create get weight function
 		getWeightInPounds();
@@ -72,7 +77,7 @@ chrome.extension.sendMessage({}, function(response) {
 					`;
 		}
 
-		//TODO
+		//TODO check if found regex match
 		function getWeightInPounds() { //https://www.amazon.com/gp/product/B00KR0202E
 			var relevantDiv = "";
 			var possibleWeights = [];
@@ -109,6 +114,24 @@ chrome.extension.sendMessage({}, function(response) {
 
 		function idExists(id) {
 			return (document.getElementById(id) != null);
+		}
+
+		function checkIsAsinMerge() {
+			var newLocation = "";
+			var count = 5;
+
+			var check = setInterval(function() {
+				if (count > 0) {
+					count--;
+					newLocation = window.location.href;
+					if(newLocation != oldLocation) {
+						console.log("This is an asin merge!");
+					clearInterval(check);
+					}
+				} else {
+					clearInterval(check);
+				}
+			}, 1000); // check every second
 		}
 
 	}
