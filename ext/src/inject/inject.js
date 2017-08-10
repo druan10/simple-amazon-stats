@@ -1,12 +1,12 @@
-window.addEventListener("hashchange", function (){
-    console.log("url changed");
-});
+
 
 chrome.extension.sendMessage({}, function(response) {
 	var readyStateCheckInterval = setInterval(function() {
 	if (document.readyState === "complete") {
 		clearInterval(readyStateCheckInterval);
-
+        
+        // ----------------------------------------------------------
+        // Initial Setup
 		console.log("Amazon Data Simplifier Loaded!");
 
 		var targetDivName = "detail-ilm_div";
@@ -28,18 +28,17 @@ chrome.extension.sendMessage({}, function(response) {
 		targetDiv.innerHTML = `
 			<table id = "simpleStatsTable"> 
 				<h3>Simplified Amazon Stats</h3>
-				<form id="weightConverter">
-					Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
-				</form>
 			</table> 
 			<hr>`;
 
-		document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
+
 
 		var simpleStatsTable = document.getElementById("simpleStatsTable");
-
-		//TODO, create get weight function
-//		getWeightInPounds();
+        addWeightConverter();
+        
+        // ----------------------------------------------------------
+        // Scrape Data
+        getProductDimensions();
 
 		// ----------------------------------------------------------
 		// Functions for scraping and presenting data
@@ -68,7 +67,15 @@ chrome.extension.sendMessage({}, function(response) {
 					</tr>
 					`;
 		}
-
+        
+        function addWeightConverter() {
+            addStatItem(`
+                <form id="weightConverter">
+                    Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
+				</form>
+            `);
+            document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
+        }
 		//TODO check if found regex match
 		function getWeightInPounds() { //https://www.amazon.com/gp/product/B00KR0202E
 			var relevantDiv = "";
@@ -107,6 +114,16 @@ chrome.extension.sendMessage({}, function(response) {
 		function idExists(id) {
 			return (document.getElementById(id) != null);
 		}
+        
+        function getProductDimensions() {
+            if (idExists("detail-bullets")) {
+                var detailsDiv = document.getElementById("detail-bullets");
+//                window.console.log(detailsDiv);
+                var contentItems = detailsDiv.getElementsByTagName("li");
+                var contentToAdd = "<p>"+contentItems[0].innerText+"</p";
+                addStatItem(contentToAdd);
+            }
+        }
 
 	}
 	}, 10);
