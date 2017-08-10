@@ -28,17 +28,19 @@ chrome.extension.sendMessage({}, function(response) {
 		targetDiv.innerHTML = `
 			<table id = "simpleStatsTable"> 
 				<h3>Simplified Amazon Stats</h3>
+                <form id="weightConverter">
+                    Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
+				</form>
 			</table> 
 			<hr>`;
-
-
-
-		var simpleStatsTable = document.getElementById("simpleStatsTable");
-        addWeightConverter();
         
+		var simpleStatsTable = document.getElementById("simpleStatsTable");
+        
+        document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);        
+
         // ----------------------------------------------------------
         // Scrape Data
-        getProductDimensions();
+        getProductDetails();
 
 		// ----------------------------------------------------------
 		// Functions for scraping and presenting data
@@ -68,13 +70,7 @@ chrome.extension.sendMessage({}, function(response) {
 					`;
 		}
         
-        function addWeightConverter() {
-            addStatItem(`
-                <form id="weightConverter">
-                    Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
-				</form>
-            `);
-            document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
+            
         }
 		//TODO check if found regex match
 		function getWeightInPounds() { //https://www.amazon.com/gp/product/B00KR0202E
@@ -115,13 +111,36 @@ chrome.extension.sendMessage({}, function(response) {
 			return (document.getElementById(id) != null);
 		}
         
-        function getProductDimensions() {
+        function addErrorItem(errorMessage) {
+            addStatItem(`
+                        <b>`+errorMessage+`</b>
+                        `);
+        }
+        
+        function getProductDetails() {
             if (idExists("detail-bullets")) {
                 var detailsDiv = document.getElementById("detail-bullets");
-//                window.console.log(detailsDiv);
+                var contentToAdd = "";
                 var contentItems = detailsDiv.getElementsByTagName("li");
-                var contentToAdd = "<p>"+contentItems[0].innerText+"</p";
-                addStatItem(contentToAdd);
+                for (i=0; i < contentItems.length; i++) {
+                    // Add product dimensions if found
+                    if (contentItems[i].innerText.includes("Product Dimensions")) {
+                        contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
+                        addStatItem(contentToAdd);
+                    }
+                    // Add Shipping Weight if found
+                    if (contentItems[i].innerText.includes("Shipping Weight")) {
+                        contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
+                        addStatItem(contentToAdd);
+                    }
+                    // Add Item Weight if found
+                    if (contentItems[i].innerText.includes("Item Weight")) {
+                        contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
+                        addStatItem(contentToAdd);
+                    }
+                }
+            } else {
+                addErrorItem("No Product Dimensions Found");
             }
         }
 
