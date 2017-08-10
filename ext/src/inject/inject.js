@@ -57,7 +57,6 @@ chrome.extension.sendMessage({}, function(response) {
 				currentCol.innerHTML = htmlToAdd;
 			}
 			numOfStatItems++;
-			console.log(numOfStatItems);
 		}
 
 		function addEmtpyRowToStatsTable() {
@@ -144,6 +143,5 @@ chrome.extension.sendMessage({}, function(response) {
             }
         }
 
-	}
 	}, 10);
 });
