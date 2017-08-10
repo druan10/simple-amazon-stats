@@ -1,28 +1,23 @@
-var oldLocation = window.location.href;
+window.addEventListener("hashchange", function (){
+    console.log("url changed");
+});
 
 chrome.extension.sendMessage({}, function(response) {
 	var readyStateCheckInterval = setInterval(function() {
 	if (document.readyState === "complete") {
 		clearInterval(readyStateCheckInterval);
 
-		// ----------------------------------------------------------
-		// This part of the script triggers when page is done loading
 		console.log("Amazon Data Simplifier Loaded!");
 
-		console.log(oldLocation);
-
-		console.log(window.location.href);
-		// This script will replace the div with the following id, if it doesn't exist, the program will quit
 		var targetDivName = "detail-ilm_div";
 
 		if (!idExists(targetDivName)) {
 			console.log("Exiting, couldn't find div to replace!");
 			die();
-		}
+		} else {
+            		var targetDiv = document.getElementById(targetDivName);
+        }
 
-		var targetDiv = document.getElementById(targetDivName);
-		
-		// Default Values
 		var shippingWeight = 0.01;
 		var shippingWeightSource = "product-details";
 		var numOfStatItems = 0;
@@ -39,15 +34,12 @@ chrome.extension.sendMessage({}, function(response) {
 			</table> 
 			<hr>`;
 
-		// Allows real time updates to the weight converter
 		document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
 
 		var simpleStatsTable = document.getElementById("simpleStatsTable");
-		
-		//checkIsAsinMerge();
 
 		//TODO, create get weight function
-		getWeightInPounds();
+//		getWeightInPounds();
 
 		// ----------------------------------------------------------
 		// Functions for scraping and presenting data
@@ -114,24 +106,6 @@ chrome.extension.sendMessage({}, function(response) {
 
 		function idExists(id) {
 			return (document.getElementById(id) != null);
-		}
-
-		function checkIsAsinMerge() {
-			var newLocation = "";
-			var count = 5;
-
-			var check = setInterval(function() {
-				if (count > 0) {
-					count--;
-					newLocation = window.location.href;
-					if(newLocation != oldLocation) {
-						console.log("This is an asin merge!");
-					clearInterval(check);
-					}
-				} else {
-					clearInterval(check);
-				}
-			}, 1000); // check every second
 		}
 
 	}
