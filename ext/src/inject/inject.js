@@ -37,10 +37,7 @@ chrome.extension.sendMessage({}, function(response) {
 		var simpleStatsTable = document.getElementById("simpleStatsTable");
         
         document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);        
-
-        // ----------------------------------------------------------
-        // Scrape Data
-        getProductDetails();
+        
 
 		// ----------------------------------------------------------
 		// Functions for scraping and presenting data
@@ -142,6 +139,11 @@ chrome.extension.sendMessage({}, function(response) {
                 addErrorItem("No Product Dimensions Found");
             }
         }
-
+        
+        // ----------------------------------------------------------
+        // Scrape Data
+        
+        getProductDetails();
+        
 	}, 10);
 });
