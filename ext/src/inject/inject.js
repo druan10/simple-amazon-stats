@@ -1,53 +1,43 @@
+
+
 chrome.extension.sendMessage({}, function(response) {
 	var readyStateCheckInterval = setInterval(function() {
 	if (document.readyState === "complete") {
 		clearInterval(readyStateCheckInterval);
-
-
-		// ----------------------------------------------------------
-		// This part of the script triggers when page is done loading
-
+        
+        // ----------------------------------------------------------
+        // Initial Setup
 		console.log("Amazon Data Simplifier Loaded!");
 
-		var targetDivName = "detail-ilm_div2";
+		var targetDivName = "detail-ilm_div";
 
-		// Div to be replaced with stats table
 		if (!idExists(targetDivName)) {
-			console.log("Shit don't exist fam");
-		}
+			console.log("Exiting, couldn't find div to replace!");
+			die();
+		} else {
+            		var targetDiv = document.getElementById(targetDivName);
+        }
 
-		var targetDiv = document.getElementById(targetDivName);
-
-		
-		// Default Values
 		var shippingWeight = 0.01;
 		var shippingWeightSource = "product-details";
 		var numOfStatItems = 0;
 		var currentCol = "";
 		var numOfStatRows = 0;
+		var regexPattern = "";
 
 		targetDiv.innerHTML = `
 			<table id = "simpleStatsTable"> 
 				<h3>Simplified Amazon Stats</h3>
-				<form id="weightConverter">
-					Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
+                <form id="weightConverter">
+                    Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
 				</form>
 			</table> 
 			<hr>`;
-
-		// Allows real time updates to the weight converter
-		document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
-
+        
 		var simpleStatsTable = document.getElementById("simpleStatsTable");
-
-		addStatItem("<b>HEY</b>");
-
-		//TODO, create get weight function
-		// getWeightInPounds();
-
-
-
-
+        
+        document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);        
+        
 
 		// ----------------------------------------------------------
 		// Functions for scraping and presenting data
@@ -64,7 +54,6 @@ chrome.extension.sendMessage({}, function(response) {
 				currentCol.innerHTML = htmlToAdd;
 			}
 			numOfStatItems++;
-			console.log(numOfStatItems);
 		}
 
 		function addEmtpyRowToStatsTable() {
@@ -76,12 +65,23 @@ chrome.extension.sendMessage({}, function(response) {
 					</tr>
 					`;
 		}
-
-		function getWeightInPounds() {
+        
+            
+        }
+		//TODO check if found regex match
+		function getWeightInPounds() { //https://www.amazon.com/gp/product/B00KR0202E
 			var relevantDiv = "";
-			var dataArray = [];
-			relevantDiv = document.getElementById("detail-bullets");
-			console.log(relevantDiv);
+			var possibleWeights = [];
+			
+			if (idExists("detail-bullets")) {
+				relevantDiv = document.getElementById("detail-bullets");
+				console.log("found details");
+				regexPattern = "(\d{1,}\.\d{,2})(?:\spounds)";
+				if (RegExp.test(String(relevantDiv))) {
+					console.log("found weight in pounds");
+				}
+
+			}
 		}
 
 		function convertOuncesToPounds () {
@@ -106,7 +106,44 @@ chrome.extension.sendMessage({}, function(response) {
 		function idExists(id) {
 			return (document.getElementById(id) != null);
 		}
-
-	}
+        
+        function addErrorItem(errorMessage) {
+            addStatItem(`
+                        <b>`+errorMessage+`</b>
+                        `);
+        }
+        
+        function getProductDetails() {
+            if (idExists("detail-bullets")) {
+                var detailsDiv = document.getElementById("detail-bullets");
+                var contentToAdd = "";
+                var contentItems = detailsDiv.getElementsByTagName("li");
+                for (i=0; i < contentItems.length; i++) {
+                    // Add product dimensions if found
+                    if (contentItems[i].innerText.includes("Product Dimensions")) {
+                        contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
+                        addStatItem(contentToAdd);
+                    }
+                    // Add Shipping Weight if found
+                    if (contentItems[i].innerText.includes("Shipping Weight")) {
+                        contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
+                        addStatItem(contentToAdd);
+                    }
+                    // Add Item Weight if found
+                    if (contentItems[i].innerText.includes("Item Weight")) {
+                        contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
+                        addStatItem(contentToAdd);
+                    }
+                }
+            } else {
+                addErrorItem("No Product Dimensions Found");
+            }
+        }
+        
+        // ----------------------------------------------------------
+        // Scrape Data
+        
+        getProductDetails();
+        
 	}, 10);
 });
