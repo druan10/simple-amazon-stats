@@ -126,6 +126,20 @@ chrome.extension.sendMessage({}, function(response) {
                     }
                     // Add Shipping Weight if found
                     if (contentItems[i].innerText.includes("Shipping Weight")) {
+                        
+                        //Automatically convert values
+                        if (contentItems[i].innerText.includes("pounds")) {
+                            var match = /\d{1,4}\.\d{1,4}/.exec(contentItems[i].innerText);
+                            console.log(match[0]);
+                            document.getElementById("ouncesInput").value = match*16;
+                            convertOuncesToPounds();
+                        } else if (contentItems[i].innerText.includes("ounces")) {
+                            var match = /\d{1,4}\.\d{1,4}/.exec(contentItems[i].innerText);
+                            document.getElementById("ouncesInput").value = match;
+                            console.log(match[0]);
+                            convertOuncesToPounds();
+                        }
+                        
                         contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
                         addStatItem(contentToAdd);
                     }
