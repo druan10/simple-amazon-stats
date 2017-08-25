@@ -16,6 +16,7 @@ chrome.extension.sendMessage({}, function(response) {
 			die();
 		} else {
             		var targetDiv = document.getElementById(targetDivName);
+                    
         }
 
 		var shippingWeight = 0.01;
@@ -24,7 +25,7 @@ chrome.extension.sendMessage({}, function(response) {
 		var currentCol = "";
 		var numOfStatRows = 0;
 		var regexPattern = "";
-
+        var productDimensions =[0,0,0];
 		targetDiv.innerHTML = `
 			<table id = "simpleStatsTable"> 
 				<h3>Simplified Amazon Stats</h3>
@@ -38,7 +39,7 @@ chrome.extension.sendMessage({}, function(response) {
         
         document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);        
         
-
+        
 		// ----------------------------------------------------------
 		// Functions for scraping and presenting data
 
@@ -66,8 +67,6 @@ chrome.extension.sendMessage({}, function(response) {
 					`;
 		}
         
-            
-        }
 		//TODO check if found regex match
 		function getWeightInPounds() { //https://www.amazon.com/gp/product/B00KR0202E
 			var relevantDiv = "";
@@ -121,16 +120,21 @@ chrome.extension.sendMessage({}, function(response) {
                 for (i=0; i < contentItems.length; i++) {
                     // Add product dimensions if found
                     if (contentItems[i].innerText.includes("Product Dimensions")) {
+                        
+                        //Todo autodetect dimension irregular
+                        var matches;
+                        matches = /\d{1,3}(\.\d{1,3})?/g.exec(contentItems[i].innerText);
+                        console.log(matches);
                         contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
                         addStatItem(contentToAdd);
                     }
+                    
                     // Add Shipping Weight if found
-                    if (contentItems[i].innerText.includes("Shipping Weight")) {
+                    else if (contentItems[i].innerText.includes("Shipping Weight")) {
                         
                         //Automatically convert values
                         if (contentItems[i].innerText.includes("pounds")) {
                             var match = /\d{1,4}\.\d{1,4}/.exec(contentItems[i].innerText);
-                            console.log(match[0]);
                             document.getElementById("ouncesInput").value = match*16;
                             convertOuncesToPounds();
                         } else if (contentItems[i].innerText.includes("ounces")) {
@@ -156,8 +160,8 @@ chrome.extension.sendMessage({}, function(response) {
         
         // ----------------------------------------------------------
         // Scrape Data
-        
         getProductDetails();
         
+        }
 	}, 10);
 });
