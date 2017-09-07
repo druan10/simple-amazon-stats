@@ -6,43 +6,31 @@ chrome.extension.sendMessage({}, function(response) {
 		clearInterval(readyStateCheckInterval);
         
         // ----------------------------------------------------------
-        // Initial Setup
-		console.log("Amazon Data Simplifier Loaded!");
-
-		var targetDivName = "detail-ilm_div";
-
-		if (!idExists(targetDivName)) {
-			console.log("Exiting, couldn't find div to replace!");
-			die();
-		} else {
-            		var targetDiv = document.getElementById(targetDivName);
-                    
-        }
-
+		// Initial Setup
 		var shippingWeight = 0.01;
-		var shippingWeightSource = "product-details";
 		var numOfStatItems = 0;
 		var currentCol = "";
 		var numOfStatRows = 0;
 		var regexPattern = "";
-        var productDimensions =[0,0,0];
-		targetDiv.innerHTML = `
-			<table id = "simpleStatsTable"> 
-				<h3>Simplified Amazon Stats</h3>
-                <form id="weightConverter">
-                    Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
-				</form>
-			</table> 
-			<hr>`;
-        
-		var simpleStatsTable = document.getElementById("simpleStatsTable");
-        
-        document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);        
-        
-        
+		var productDimensions = [0,0,0];
+		
+		console.log("Amazon product analyzer initialized");
+		
+		// Default ad div to replace.
+		var targetDivName = "detail-ilm_div";
+
+		if (!idExists(targetDivName)) {
+			console.log("Exiting, couldn't find target div to replace!");
+			die();
+		} else {
+					var targetDiv = document.getElementById(targetDivName);
+					main();
+		}
+		
 		// ----------------------------------------------------------
 		// Functions for scraping and presenting data
 
+		//Adds html content to the first empty table column, or adds a table row if none are free
 		function addStatItem(htmlToAdd) {
 
 			// If we have an even number of items, then we have to add a new empty row and append item to first col, if not, add to second column
@@ -57,6 +45,7 @@ chrome.extension.sendMessage({}, function(response) {
 			numOfStatItems++;
 		}
 
+		//Adds placeholder row with two table columns
 		function addEmtpyRowToStatsTable() {
 			numOfStatRows++;
 			simpleStatsTable.innerHTML += `
@@ -106,9 +95,9 @@ chrome.extension.sendMessage({}, function(response) {
 			return (document.getElementById(id) != null);
 		}
         
-        function addErrorItem(errorMessage) {
+        function displayError(errorMessage) {
             addStatItem(`
-                        <b>`+errorMessage+`</b>
+                        <b style="color:red;">`+errorMessage+`</b>
                         `);
         }
         
@@ -153,15 +142,77 @@ chrome.extension.sendMessage({}, function(response) {
                         addStatItem(contentToAdd);
                     }
                 }
-            } else {
-                addErrorItem("No Product Dimensions Found");
+			} else if (idExists("prodDetails")) {
+
+				console.log("Found prodDetails div");
+				var detailsDiv = document.getElementById("prodDetails");
+				var contentToAdd = "";
+
+				if (idExists('productDetails_detailBullets_sections1')){
+					var contentItems = detailsDiv.getElementsByTagName("tr");
+					for (i=0; i < contentItems.length; i++) {
+						// Add product dimensions if found
+						if (contentItems[i].innerText.includes("Product Dimensions")) {
+							
+							//Todo autodetect dimension irregular
+							var matches;
+							matches = /\d{1,3}(\.\d{1,3})?/g.exec(contentItems[i].innerText);
+							console.log(matches);
+							contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
+							addStatItem(contentToAdd);
+						}
+						
+						// Add Shipping Weight if found
+						else if (contentItems[i].innerText.includes("Shipping Weight")) {
+							
+							//Automatically convert values
+							if (contentItems[i].innerText.includes("pounds")) {
+								var match = /\d{1,4}\.\d{1,4}/.exec(contentItems[i].innerText);
+								document.getElementById("ouncesInput").value = match*16;
+								convertOuncesToPounds();
+							} else if (contentItems[i].innerText.includes("ounces")) {
+								var match = /\d{1,4}\.\d{1,4}/.exec(contentItems[i].innerText);
+								document.getElementById("ouncesInput").value = match;
+								console.log(match[0]);
+								convertOuncesToPounds();
+							}
+							
+							contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
+							addStatItem(contentToAdd);
+						}
+						// Add Item Weight if found
+						if (contentItems[i].innerText.includes("Item Weight")) {
+							contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
+							addStatItem(contentToAdd);
+						}
+					}
+					
+				}
+				
+			} else {
+                displayError("No Product information found!");
             }
         }
-        
-        // ----------------------------------------------------------
-        // Scrape Data
-        getProductDetails();
-        
+		
+		function main() {
+						targetDiv.innerHTML = `
+							<table id = "simpleStatsTable"> 
+								<h3>Simplified Amazon Stats</h3>
+								<form id="weightConverter">
+									Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
+								</form>
+							</table> 
+							<hr>`;
+						
+						var simpleStatsTable = document.getElementById("simpleStatsTable");
+						
+						// Add key listener for automatic conversions
+						document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
+			
+						getProductDetails();
+			
+			}
+
         }
 	}, 10);
 });
