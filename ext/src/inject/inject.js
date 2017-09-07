@@ -13,6 +13,8 @@ chrome.extension.sendMessage({}, function(response) {
 		var numOfStatRows = 0;
 		var regexPattern = "";
 		var productDimensions = [0,0,0];
+		var isWeightFound = false;
+		var OUNCES_PER_POUND = 16;
 		
 		console.log("Amazon product analyzer initialized");
 		
@@ -99,7 +101,52 @@ chrome.extension.sendMessage({}, function(response) {
             addStatItem(`
                         <b style="color:red;">`+errorMessage+`</b>
                         `);
-        }
+		}
+		
+		function extractProductData(item) {
+
+			// Check for Product Dimensions
+			if (item.innerText.includes("Product Dimensions")) {
+				
+				//Todo autodetect dimension irregular
+				var matches;
+				matches = /\d{1,3}(\.\d{1,3})?/g.exec(item.innerText);
+				contentToAdd = "<p>"+item.innerText+"</p>";
+				addStatItem(contentToAdd);
+			}
+			
+			// Check for Shipping Weight
+			if (item.innerText.includes("Shipping Weight")) {
+				isWeightFound = true;
+				if (item.innerText.includes("pounds")) {
+					var match = /\d{1,4}\.\d{1,4}/.exec(item.innerText);
+					document.getElementById("ouncesInput").value = match * OUNCES_PER_POUND;
+					isWeightFound = true;
+				} else if (item.innerText.includes("ounces")) {
+					var match = /\d{1,4}\.\d{1,4}/.exec(item.innerText);
+					document.getElementById("ouncesInput").value = match;
+					console.log(match[0]);
+					isWeightFound = true;
+				}
+
+				convertOuncesToPounds();
+				contentToAdd = "<p>"+item.innerText+"</p>";
+				addStatItem(contentToAdd);
+			}
+
+			// Check for Item Weight
+			if (item.innerText.includes("Item Weight")) {
+				var match = /\d{1,4}\.\d{1,4}/.exec(item.innerText);
+				contentToAdd = "<p>"+item.innerText+"</p>";
+
+				// If the shipping weight isn't listed, we use the item weight
+				if (!isWeightFound) {
+					document.getElementById("ouncesInput").value = match;
+				}
+				addStatItem(contentToAdd);
+			}
+			
+		}
         
         function getProductDetails() {
             if (idExists("detail-bullets")) {
@@ -107,86 +154,17 @@ chrome.extension.sendMessage({}, function(response) {
                 var contentToAdd = "";
                 var contentItems = detailsDiv.getElementsByTagName("li");
                 for (i=0; i < contentItems.length; i++) {
-                    // Add product dimensions if found
-                    if (contentItems[i].innerText.includes("Product Dimensions")) {
-                        
-                        //Todo autodetect dimension irregular
-                        var matches;
-                        matches = /\d{1,3}(\.\d{1,3})?/g.exec(contentItems[i].innerText);
-                        console.log(matches);
-                        contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
-                        addStatItem(contentToAdd);
-                    }
-                    
-                    // Add Shipping Weight if found
-                    else if (contentItems[i].innerText.includes("Shipping Weight")) {
-                        
-                        //Automatically convert values
-                        if (contentItems[i].innerText.includes("pounds")) {
-                            var match = /\d{1,4}\.\d{1,4}/.exec(contentItems[i].innerText);
-                            document.getElementById("ouncesInput").value = match*16;
-                            convertOuncesToPounds();
-                        } else if (contentItems[i].innerText.includes("ounces")) {
-                            var match = /\d{1,4}\.\d{1,4}/.exec(contentItems[i].innerText);
-                            document.getElementById("ouncesInput").value = match;
-                            console.log(match[0]);
-                            convertOuncesToPounds();
-                        }
-                        
-                        contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
-                        addStatItem(contentToAdd);
-                    }
-                    // Add Item Weight if found
-                    if (contentItems[i].innerText.includes("Item Weight")) {
-                        contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
-                        addStatItem(contentToAdd);
-                    }
+					// TODO
+					extractProductData(contentItems[i]);
                 }
 			} else if (idExists("prodDetails")) {
 
 				console.log("Found prodDetails div");
 				var detailsDiv = document.getElementById("prodDetails");
 				var contentToAdd = "";
-
-				if (idExists('productDetails_detailBullets_sections1')){
-					var contentItems = detailsDiv.getElementsByTagName("tr");
-					for (i=0; i < contentItems.length; i++) {
-						// Add product dimensions if found
-						if (contentItems[i].innerText.includes("Product Dimensions")) {
-							
-							//Todo autodetect dimension irregular
-							var matches;
-							matches = /\d{1,3}(\.\d{1,3})?/g.exec(contentItems[i].innerText);
-							console.log(matches);
-							contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
-							addStatItem(contentToAdd);
-						}
-						
-						// Add Shipping Weight if found
-						else if (contentItems[i].innerText.includes("Shipping Weight")) {
-							
-							//Automatically convert values
-							if (contentItems[i].innerText.includes("pounds")) {
-								var match = /\d{1,4}\.\d{1,4}/.exec(contentItems[i].innerText);
-								document.getElementById("ouncesInput").value = match*16;
-								convertOuncesToPounds();
-							} else if (contentItems[i].innerText.includes("ounces")) {
-								var match = /\d{1,4}\.\d{1,4}/.exec(contentItems[i].innerText);
-								document.getElementById("ouncesInput").value = match;
-								console.log(match[0]);
-								convertOuncesToPounds();
-							}
-							
-							contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
-							addStatItem(contentToAdd);
-						}
-						// Add Item Weight if found
-						if (contentItems[i].innerText.includes("Item Weight")) {
-							contentToAdd = "<p>"+contentItems[i].innerText+"</p>";
-							addStatItem(contentToAdd);
-						}
-					}
-					
+				var contentItems = detailsDiv.getElementsByTagName("tr");
+				for (i=0; i < contentItems.length; i++) {
+					extractProductData(contentItems[i]);
 				}
 				
 			} else {
@@ -195,21 +173,22 @@ chrome.extension.sendMessage({}, function(response) {
         }
 		
 		function main() {
-						targetDiv.innerHTML = `
-							<table id = "simpleStatsTable"> 
-								<h3>Simplified Amazon Stats</h3>
-								<form id="weightConverter">
-									Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
-								</form>
-							</table> 
-							<hr>`;
-						
-						var simpleStatsTable = document.getElementById("simpleStatsTable");
-						
-						// Add key listener for automatic conversions
-						document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
+			// Inject statistics into the page
+			targetDiv.innerHTML = `
+				<table id = "simpleStatsTable"> 
+					<h3>Simplified Amazon Stats</h3>
+					<form id="weightConverter">
+						Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
+					</form>
+				</table> 
+				<hr>`;
 			
-						getProductDetails();
+			var simpleStatsTable = document.getElementById("simpleStatsTable");
+			
+			// Add key listener for automatic weight conversions
+			document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
+
+			getProductDetails();
 			
 			}
 
