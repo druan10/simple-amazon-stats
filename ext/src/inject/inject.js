@@ -25,8 +25,8 @@ chrome.extension.sendMessage({}, function(response) {
 			console.log("Exiting, couldn't find target div to replace!");
 			die();
 		} else {
-					var targetDiv = document.getElementById(targetDivName);
-					main();
+			var targetDiv = document.getElementById(targetDivName);
+			main();
 		}
 		
 		// ----------------------------------------------------------
@@ -107,7 +107,7 @@ chrome.extension.sendMessage({}, function(response) {
 
 			// Check for Product Dimensions
 			if (item.innerText.includes("Product Dimensions")) {
-				
+				console.log("Found Product Dimensions");
 				//Todo autodetect dimension irregular
 				var matches;
 				matches = /\d{1,3}(\.\d{1,3})?/g.exec(item.innerText);
@@ -117,16 +117,14 @@ chrome.extension.sendMessage({}, function(response) {
 			
 			// Check for Shipping Weight
 			if (item.innerText.includes("Shipping Weight")) {
+				console.log("Found Shipping Weight");
 				isWeightFound = true;
 				if (item.innerText.includes("pounds")) {
-					var match = /\d{1,4}\.\d{1,4}/.exec(item.innerText);
+					var match = /\d{1,4}\.?\d{0,4}/.exec(item.innerText);
 					document.getElementById("ouncesInput").value = match * OUNCES_PER_POUND;
-					isWeightFound = true;
 				} else if (item.innerText.includes("ounces")) {
-					var match = /\d{1,4}\.\d{1,4}/.exec(item.innerText);
+					var match = /\d{1,4}\.?\d{0,4}/.exec(item.innerText);
 					document.getElementById("ouncesInput").value = match;
-					console.log(match[0]);
-					isWeightFound = true;
 				}
 
 				convertOuncesToPounds();
@@ -136,10 +134,10 @@ chrome.extension.sendMessage({}, function(response) {
 
 			// Check for Item Weight
 			if (item.innerText.includes("Item Weight")) {
-				var match = /\d{1,4}\.\d{1,4}/.exec(item.innerText);
+				console.log("Found Item Weight");
+				var match = /\d{1,4}\.?\d{0,4}/.exec(item.innerText);
 				contentToAdd = "<p>"+item.innerText+"</p>";
-
-				// If the shipping weight isn't listed, we use the item weight
+				// Prioritize using Shipping Weight over item weight (if available)
 				if (!isWeightFound) {
 					document.getElementById("ouncesInput").value = match;
 				}
@@ -149,24 +147,24 @@ chrome.extension.sendMessage({}, function(response) {
 		}
         
         function getProductDetails() {
+
             if (idExists("detail-bullets")) {
+				console.log("Found detail-bullets");
                 var detailsDiv = document.getElementById("detail-bullets");
                 var contentToAdd = "";
                 var contentItems = detailsDiv.getElementsByTagName("li");
-                for (i=0; i < contentItems.length; i++) {
+                for (i = 0; i < contentItems.length; i++) {
 					// TODO
 					extractProductData(contentItems[i]);
-                }
+				}	
 			} else if (idExists("prodDetails")) {
-
 				console.log("Found prodDetails div");
 				var detailsDiv = document.getElementById("prodDetails");
 				var contentToAdd = "";
 				var contentItems = detailsDiv.getElementsByTagName("tr");
-				for (i=0; i < contentItems.length; i++) {
+				for (i = 0; i < contentItems.length; i++) {
 					extractProductData(contentItems[i]);
 				}
-				
 			} else {
                 displayError("No Product information found!");
             }
