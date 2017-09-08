@@ -7,6 +7,8 @@ chrome.extension.sendMessage({}, function (response) {
 
 			// ----------------------------------------------------------
 			// Initial Setup
+			const OUNCES_PER_POUND = 16;
+			const INJECT_TARGET_DIV_ID = "detail-ilm_div";
 			var shippingWeight = 0.01;
 			var numOfStatItems = 0;
 			var currentCol = "";
@@ -14,8 +16,7 @@ chrome.extension.sendMessage({}, function (response) {
 			var regexPattern = "";
 			var productDimensions = [0, 0, 0];
 			var isWeightFound = false;
-			var OUNCES_PER_POUND = 16;
-			var INJECT_TARGET_DIV_ID = "detail-ilm_div";
+			
 
 			if (!idExists(INJECT_TARGET_DIV_ID)) {
 				console.log("Exiting, couldn't find target div to replace!");
