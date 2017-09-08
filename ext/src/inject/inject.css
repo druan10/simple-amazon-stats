@@ -12,3 +12,11 @@
 #rightColumn {
    width:50%;
 }
+
+#simpleStatsTable tbody:nth-child(odd) {
+    background-color: #f2f2f2;
+}
+
+#statsDiv {
+    padding: .5% 1% 1% 1%;
+}
