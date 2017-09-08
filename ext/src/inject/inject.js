@@ -99,7 +99,7 @@ chrome.extension.sendMessage({}, function (response) {
 			function extractProductData(item) {
 
 				// Check for Product Dimensions
-				if (item.innerText.includes("Product Dimensions")) {
+				if (item.innerText.includes("Product Dimensions") || item.innerText.includes("Package Dimensions")) {
 					console.log("Found Product Dimensions");
 					//Todo autodetect dimension irregular
 					var matches;
