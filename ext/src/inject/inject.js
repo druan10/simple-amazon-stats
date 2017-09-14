@@ -9,6 +9,8 @@ chrome.extension.sendMessage({}, function (response) {
 			// Initial Setup
 			const OUNCES_PER_POUND = 16;
 			const INJECT_TARGET_DIV_ID = "detail-ilm_div";
+			const ASIN_REGEX = RegExp("(https\:\/\/www.amazon.com\/)(gp|dp)\/product\/(\w){10}"); // REGEX By https://stackoverflow.com/users/205934/jpsimons
+
 			var shippingWeight = 0.01;
 			var numOfStatItems = 0;
 			var currentCol = "";
@@ -16,7 +18,8 @@ chrome.extension.sendMessage({}, function (response) {
 			var regexPattern = "";
 			var productDimensions = [0, 0, 0];
 			var isWeightFound = false;
-			
+			var asinMergeCheck;
+			var productAsins = [];
 
 			if (!idExists(INJECT_TARGET_DIV_ID)) {
 				console.log("Exiting, couldn't find target div to replace!");
@@ -181,6 +184,40 @@ chrome.extension.sendMessage({}, function (response) {
 				// Add key listener for automatic weight conversions
 				document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
 				getProductDetails();
+				/**
+				 * TODO, ASIN MERGE CHECK
+				 */
+				// asinMergeCheck = setInterval(checkAsinMerge, 100);
+			}
+
+			function checkAsinMerge() {
+
+				currentUrlAsin = getAsinFromUrl();
+
+				if (productAsins.length == 0) {
+					if (currentUrlAsin) {
+						productAsins += currentUrlAsin;
+						console.log(currentUrlAsin);
+					}
+				} else if (currentUrlAsin != productAsins[0]) {
+					productAsins += currentUrlAsin;
+					console.log(currentUrlAsin);
+					clearInterval(asinMergeCheck);
+				}
+
+			}
+
+			/**
+			 * Attempts to find an asin in the product page URL
+			 */
+			function getAsinFromUrl () {
+				m = window.location.href.match("([a-zA-Z0-9]{10})(?:[/?]|$)");
+				if (m) {
+					console.log("ASIN = " + m[0]);
+					return m[0];
+				} else {
+					console.log("Unable to detect asin. Bad REGEX?");
+				}
 			}
 
 		}
