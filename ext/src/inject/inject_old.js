@@ -41,13 +41,17 @@ chrome.extension.sendMessage({}, function (response) {
 					}
 				}
 				console.log(dataQueue);
-				console.log(dataQueue.length);
 			}
 
 			function parseQueue() {
-					for (i = 0; i < dataQueue.length + 1; i++) {
-						getProductDetails(dataQueue.shift());
+				if (dataQueue.length > 0) {
+					for (i = 0; i< dataQueue.length; i++) {
+						
 					}
+				} else {
+					console.log("No data to parse!");
+				}
+				
 			}
 
 			//Adds html content to the first empty table column, or adds a table row if none are free
@@ -199,7 +203,8 @@ chrome.extension.sendMessage({}, function (response) {
 				// Add key listener for automatic weight conversions
 				document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
 				updateQueue();
-				parseQueue();
+				getProductDetails();
+
 				/**
 				 * TODO, ASIN MERGE CHECK
 				 */
