@@ -74,20 +74,6 @@ chrome.extension.sendMessage({}, function (response) {
 					`;
 			}
 
-			function getWeightInPounds() {
-				var relevantDiv = "";
-				var possibleWeights = [];
-
-				if (idExists("detail-bullets")) {
-					relevantDiv = document.getElementById("detail-bullets");
-					console.log("found details");
-					regexPattern = "(\d{1,}\.\d{,2})(?:\spounds)";
-					if (RegExp.test(String(relevantDiv))) {
-						console.log("found weight in pounds");
-					}
-				}
-			}
-
 			function convertOuncesToPounds() {
 				console.log("converting");
 				var ounces = document.getElementById("ouncesInput").value;
