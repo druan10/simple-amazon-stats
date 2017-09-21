@@ -193,7 +193,6 @@ chrome.extension.sendMessage({}, function (response) {
 			}
 
 			function checkAsinMerge() {
-
 				currentUrlAsin = getAsinFromUrl();
 
 				if (productAsins.length == 0) {
@@ -206,7 +205,6 @@ chrome.extension.sendMessage({}, function (response) {
 					console.log(currentUrlAsin);
 					clearInterval(asinMergeCheck);
 				}
-
 			}
 
 			/**
