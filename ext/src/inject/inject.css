@@ -20,3 +20,8 @@
 #statsDiv {
     padding: .5% 1% 1% 1%;
 }
+
+.notice_warning {
+    color: red;
+    font-weight: bold;
+}

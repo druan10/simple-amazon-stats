@@ -10,22 +10,26 @@ chrome.extension.sendMessage({}, function (response) {
 			const OUNCES_PER_POUND = 16;
 			const INJECT_TARGET_DIV_ID = "detail-ilm_div";
 			const ASIN_REGEX = RegExp("(https\:\/\/www.amazon.com\/)(gp|dp)\/product\/(\w){10}"); // REGEX By https://stackoverflow.com/users/205934/jpsimons
-			const NUM_TEST = RegExp(/\d{1,}((\.)\d{1,})?\s/,"mg");
+			const NUM_TEST = RegExp(/\d{1,}((\.)\d{1,})?\s/mg);
 
+			// Product information variables
 			var shippingWeight = 0.01;
+			var productDimensions = [0, 0, 0];
+			// Program variables
 			var numOfStatItems = 0;
 			var currentCol = "";
 			var numOfStatRows = 0;
 			var regexPattern = "";
 			var dataQueue = [];
+			
 			// Divs known to contain product information
 			var divList = ["detail-bullets", "prodDetails", "descriptionAndDetails"];
 			// Flags
-			var isDimensionsFound = false;
+			var areDimensionsFound = false;
 			var isWeightFound = false;
 			/**
 			 * These variables aren't used yet
-			var productDimensions = [0, 0, 0];
+			
 			var asinMergeCheck;
 			var productAsins = [];
 			*/
@@ -60,11 +64,16 @@ chrome.extension.sendMessage({}, function (response) {
 			 */
 			function evaluateScrapeQueueItems() {
 				for (i = 0; i < dataQueue.length + 1; i++) {
-						var detailsDiv = document.getElementById(dataQueue.shift());
+						var dataDiv = document.getElementById(dataQueue.shift());
 						var contentToAdd = "";
-						var contentItems = detailsDiv.getElementsByTagName("li");
+						searchTag = "";
+						if (dataDiv.getElementsByTagName("li").length > 0) {
+							searchTag = "li";
+						} else if (dataDiv.getElementsByTagName("tr").length > 0) {
+							searchTag = "tr";
+						}
+						var contentItems = dataDiv.getElementsByTagName(searchTag);
 						for (i = 0; i < contentItems.length; i++) {
-							// TODO
 							extractProductData(contentItems[i]);
 					}
 				}
@@ -132,15 +141,30 @@ chrome.extension.sendMessage({}, function (response) {
 			 * @param {String} item - HTML innerText string taken from dataQueue div 
 			 */
 			function extractProductData(item) {
-
+				console.log("item: " + item.innerText);
 				// Check for Product Dimensions
 				if (item.innerText.includes("Product Dimensions") || item.innerText.includes("Package Dimensions")) {
 					console.log("Found Product Dimensions");
-					//Todo autodetect dimension irregular
+					areDimensionsFound = true;
 					var matches;
-					matches = /\d{1,3}(\.\d{1,3})?/g.exec(item.innerText);
-					contentToAdd = "<p>" + item.innerText + "</p>";
-					addStatItem(contentToAdd);
+					matches = getRegexMatches(NUM_TEST, item.innerText);
+					console.log("Product Dimensions: ");
+					contentToAdd = "Product Dimensions: ";
+					// Only first 3 matches will be dimensions
+					for (i = 0; i < 3; i++) {
+						console.log(i + ":" + matches[i]);
+						// Highlights oversized dimensions
+						if (matches[i] >= 18) {
+							contentToAdd += "<span class='notice_warning'>"+matches[i]+"</span>";
+						} else {
+							contentToAdd += matches[i];
+						}
+						if (i < 2) {
+							contentToAdd += "x ";
+						}
+					}
+					
+					addStatItem((contentToAdd+" inches").trim());
 				}
 
 				// Check for Shipping Weight
@@ -207,7 +231,7 @@ chrome.extension.sendMessage({}, function (response) {
 				var m;
 				var matches = [];
 				while ((m = regex.exec(testString)) != null) {
-					matches += m[0];
+					matches.push(m[0]);
 				}
 				return matches;				
 			}
