@@ -65,7 +65,6 @@ chrome.extension.sendMessage({}, function (response) {
 			function evaluateScrapeQueueItems() {
 				for (i = 0; i < dataQueue.length + 1; i++) {
 						var dataDiv = document.getElementById(dataQueue.shift());
-						var contentToAdd = "";
 						searchTag = "";
 						if (dataDiv.getElementsByTagName("li").length > 0) {
 							searchTag = "li";
@@ -142,6 +141,7 @@ chrome.extension.sendMessage({}, function (response) {
 			 */
 			function extractProductData(item) {
 				console.log("item: " + item.innerText);
+				
 				// Check for Product Dimensions
 				if (item.innerText.includes("Product Dimensions") || item.innerText.includes("Package Dimensions")) {
 					console.log("Found Product Dimensions");
@@ -151,15 +151,15 @@ chrome.extension.sendMessage({}, function (response) {
 					console.log("Product Dimensions: ");
 					contentToAdd = "Product Dimensions: ";
 					// Only first 3 matches will be dimensions
-					for (i = 0; i < 3; i++) {
-						console.log(i + ":" + matches[i]);
+					for (j = 0; j < 3; j++) {
+						console.log(j + ":" + matches[j]);
 						// Highlights oversized dimensions
-						if (matches[i] >= 18) {
-							contentToAdd += "<span class='notice_warning'>"+matches[i]+"</span>";
+						if (matches[j] >= 18) {
+							contentToAdd += "<span class='notice_warning'>"+matches[j]+"</span>";
 						} else {
-							contentToAdd += matches[i];
+							contentToAdd += matches[j];
 						}
-						if (i < 2) {
+						if (j < 2) {
 							contentToAdd += "x ";
 						}
 					}
@@ -196,6 +196,7 @@ chrome.extension.sendMessage({}, function (response) {
 					addStatItem(contentToAdd);
 				}
 
+				
 			}
 
 			function main() {
