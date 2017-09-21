@@ -10,19 +10,27 @@ chrome.extension.sendMessage({}, function (response) {
 			const OUNCES_PER_POUND = 16;
 			const INJECT_TARGET_DIV_ID = "detail-ilm_div";
 			const ASIN_REGEX = RegExp("(https\:\/\/www.amazon.com\/)(gp|dp)\/product\/(\w){10}"); // REGEX By https://stackoverflow.com/users/205934/jpsimons
+			const NUM_TEST = RegExp(/\d{1,}((\.)\d{1,})?\s/,"mg");
 
 			var shippingWeight = 0.01;
 			var numOfStatItems = 0;
 			var currentCol = "";
 			var numOfStatRows = 0;
 			var regexPattern = "";
-			var productDimensions = [0, 0, 0];
+			var dataQueue = [];
+			// Divs known to contain product information
+			var divList = ["detail-bullets", "prodDetails", "descriptionAndDetails"];
+			// Flags
+			var isDimensionsFound = false;
 			var isWeightFound = false;
+			/**
+			 * These variables aren't used yet
+			var productDimensions = [0, 0, 0];
 			var asinMergeCheck;
 			var productAsins = [];
-			var dataQueue = [];
-			var divList = ["detail-bullets", "prodDetails", "descriptionAndDetails"];
-
+			*/
+			
+			
 			if (!idExists(INJECT_TARGET_DIV_ID)) {
 				console.log("Exiting, couldn't find target div to replace!");
 				die();
@@ -34,23 +42,38 @@ chrome.extension.sendMessage({}, function (response) {
 			// ----------------------------------------------------------
 			// Functions for scraping and presenting data
 
-			function updateQueue() {
+			/**
+			 * Checks whether the data divs in the divList exist on the current page
+			 * If they do, pushes them to the dataQueue
+			 */
+			function initializeScrapeQueue() {
 				for (i = 0; i < divList.length; i++) {
 					if (idExists(divList[i])) {
 						dataQueue.push(divList[i]);
 					}
 				}
-				console.log(dataQueue);
-				console.log(dataQueue.length);
 			}
-
-			function parseQueue() {
-					for (i = 0; i < dataQueue.length + 1; i++) {
-						getProductDetails(dataQueue.shift());
+			
+			/**
+			 * Checks for useful data in the divs found during initialization
+			 * If they contain important info, these data points are added to our table
+			 */
+			function evaluateScrapeQueueItems() {
+				for (i = 0; i < dataQueue.length + 1; i++) {
+						var detailsDiv = document.getElementById(dataQueue.shift());
+						var contentToAdd = "";
+						var contentItems = detailsDiv.getElementsByTagName("li");
+						for (i = 0; i < contentItems.length; i++) {
+							// TODO
+							extractProductData(contentItems[i]);
 					}
+				}
 			}
 
-			//Adds html content to the first empty table column, or adds a table row if none are free
+			/**
+			 * @function
+			 * Adds html content to the first empty table column, or adds a table row if none are free
+			 */
 			function addStatItem(htmlToAdd) {
 				if (numOfStatItems % 2 == 0) {
 					addEmtpyRowToStatsTable();
@@ -82,7 +105,10 @@ chrome.extension.sendMessage({}, function (response) {
 				}
 			}
 
-			function roundTo(n, digits) { // Written by https://stackoverflow.com/users/1634137/shura
+			/**
+			 * Written by https://stackoverflow.com/users/1634137/shura
+			 */
+			function roundTo(n, digits) { 
 				if (digits === undefined) {
 					digits = 0;
 				}
@@ -101,6 +127,10 @@ chrome.extension.sendMessage({}, function (response) {
 						`);
 			}
 
+			/**
+			 * Detects data points and adds them to our data table
+			 * @param {String} item - HTML innerText string taken from dataQueue div 
+			 */
 			function extractProductData(item) {
 
 				// Check for Product Dimensions
@@ -144,30 +174,6 @@ chrome.extension.sendMessage({}, function (response) {
 
 			}
 
-			function getProductDetails() {
-
-				if (idExists("detail-bullets")) {
-					console.log("Found detail-bullets");
-					var detailsDiv = document.getElementById("detail-bullets");
-					var contentToAdd = "";
-					var contentItems = detailsDiv.getElementsByTagName("li");
-					for (i = 0; i < contentItems.length; i++) {
-						// TODO
-						extractProductData(contentItems[i]);
-					}
-				} else if (idExists("prodDetails")) {
-					console.log("Found prodDetails div");
-					var detailsDiv = document.getElementById("prodDetails");
-					var contentToAdd = "";
-					var contentItems = detailsDiv.getElementsByTagName("tr");
-					for (i = 0; i < contentItems.length; i++) {
-						extractProductData(contentItems[i]);
-					}
-				} else {
-					displayError("No Product information found!");
-				}
-			}
-
 			function main() {
 				console.log("Amazon product analyzer initialized");
 				targetDiv.innerHTML = `
@@ -184,12 +190,26 @@ chrome.extension.sendMessage({}, function (response) {
 				var simpleStatsTable = document.getElementById("simpleStatsTable");
 				// Add key listener for automatic weight conversions
 				document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
-				updateQueue();
-				parseQueue();
+				initializeScrapeQueue();
+				evaluateScrapeQueueItems();
 				/**
 				 * TODO, ASIN MERGE CHECK
 				 */
-				// asinMergeCheck = setInterval(checkAsinMerge, 100);
+			}
+
+			/**
+			 * @function
+			 * @param {RegExp} regex - regular expression used for testing. Must include global flag!
+			 * @param {String} testString - string to test regex against
+			 * @returns array of matches
+			 */
+			function getRegexMatches(regex, testString) {
+				var m;
+				var matches = [];
+				while ((m = regex.exec(testString)) != null) {
+					matches += m[0];
+				}
+				return matches;				
 			}
 
 			function checkAsinMerge() {
@@ -208,6 +228,7 @@ chrome.extension.sendMessage({}, function (response) {
 			}
 
 			/**
+			 * @todo
 			 * Attempts to find an asin in the product page URL
 			 */
 			function getAsinFromUrl () {
