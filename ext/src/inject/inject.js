@@ -148,23 +148,15 @@ chrome.extension.sendMessage({}, function (response) {
 					areDimensionsFound = true;
 					var matches;
 					matches = getRegexMatches(NUM_TEST, item.innerText);
-					console.log("Product Dimensions: ");
-					contentToAdd = "Product Dimensions: ";
-					// Only first 3 matches will be dimensions
-					for (j = 0; j < 3; j++) {
-						console.log(j + ":" + matches[j]);
-						// Highlights oversized dimensions
-						if (matches[j] >= 18) {
-							contentToAdd += "<span class='notice_warning'>"+matches[j]+"</span>";
-						} else {
-							contentToAdd += matches[j];
-						}
-						if (j < 2) {
-							contentToAdd += "x ";
-						}
+
+					// Only first 3 items will be product dimensions, 4th is a measurement of weight, if it exists.
+					if (Math.max(matches.slice(0,3) >= 18)) {
+						var contentToAdd = "<span class='notice_warning'>"+item.innerText+"</span>";
+					} else {
+						var contentToAdd = item.innerText;
 					}
 					
-					addStatItem((contentToAdd+" inches").trim());
+					addStatItem(contentToAdd.trim());
 				}
 
 				// Check for Shipping Weight
@@ -180,7 +172,7 @@ chrome.extension.sendMessage({}, function (response) {
 					}
 
 					convertOuncesToPounds();
-					contentToAdd = "<p>" + item.innerText + "</p>";
+					var contentToAdd = "<p>" + item.innerText + "</p>";
 					addStatItem(contentToAdd);
 				}
 
@@ -188,7 +180,7 @@ chrome.extension.sendMessage({}, function (response) {
 				if (item.innerText.includes("Item Weight")) {
 					console.log("Found Item Weight");
 					var match = /\d{1,4}\.?\d{0,4}/.exec(item.innerText);
-					contentToAdd = "<p>" + item.innerText + "</p>";
+					var contentToAdd = "<p>" + item.innerText + "</p>";
 					// Prioritize using Shipping Weight over item weight (if available)
 					if (!isWeightFound) {
 						document.getElementById("ouncesInput").value = match;
