@@ -148,9 +148,8 @@ chrome.extension.sendMessage({}, function (response) {
 					areDimensionsFound = true;
 					var matches;
 					matches = getRegexMatches(NUM_TEST, item.innerText);
-
 					// Only first 3 items will be product dimensions, 4th is a measurement of weight, if it exists.
-					if (Math.max(matches.slice(0,3) >= 18)) {
+					if (Math.max.apply(null, matches.slice(0,3)) >= 18) {
 						var contentToAdd = "<span class='notice_warning'>"+item.innerText+"</span>";
 					} else {
 						var contentToAdd = item.innerText;
