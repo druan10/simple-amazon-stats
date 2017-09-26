@@ -131,7 +131,7 @@ chrome.extension.sendMessage({}, function (response) {
 
 			function displayError(errorMessage) {
 				addStatItem(`
-                        <b style="color:red;">`+ errorMessage + `</b>
+                        <span class="notice_warning">`+ errorMessage + `</span>
 						`);
 			}
 
@@ -208,6 +208,9 @@ chrome.extension.sendMessage({}, function (response) {
 				document.getElementById("ouncesInput").addEventListener("keyup", convertOuncesToPounds);
 				initializeScrapeQueue();
 				evaluateScrapeQueueItems();
+				if (numOfStatItems==0) {
+					displayError("No product data found!");
+				}
 				/**
 				 * TODO, ASIN MERGE CHECK
 				 */
