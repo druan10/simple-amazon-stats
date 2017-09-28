@@ -33,15 +33,7 @@ chrome.extension.sendMessage({}, function (response) {
 			var asinMergeCheck;
 			var productAsins = [];
 			*/
-			
-			
-			if (!idExists(INJECT_TARGET_DIV_ID)) {
-				console.log("Exiting, couldn't find target div to replace!");
-				die();
-			} else {
-				var targetDiv = document.getElementById(INJECT_TARGET_DIV_ID);
-				main();
-			}
+			main();
 
 			// ----------------------------------------------------------
 			// Functions for scraping and presenting data
@@ -192,16 +184,37 @@ chrome.extension.sendMessage({}, function (response) {
 
 			function main() {
 				console.log("Amazon product analyzer initialized");
-				targetDiv.innerHTML = `
-				<div id = "statsDiv">
-					<table id = "simpleStatsTable"> 
-						<h3>Simplified Amazon Stats</h3>
-						<form id="weightConverter">
-							Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
-						</form>
-					</table> 
-				</div>
-				<hr>`;
+
+				if (!idExists(INJECT_TARGET_DIV_ID)) {
+					let dp = document.getElementById("dp");
+					targetDiv = document.createElement("div");
+					targetDiv.innerHTML = `
+					<div id = "statsDiv">
+						<table id = "simpleStatsTable"> 
+							<h3>Simplified Amazon Stats</h3>
+							<form id="weightConverter">
+								Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
+							</form>
+						</table> 
+					</div>
+					<hr>`;
+					dp.insertBefore(targetDiv, dp.firstChild);
+					console.log("ayy....");
+				} else {
+					var targetDiv = document.getElementById(INJECT_TARGET_DIV_ID);
+					targetDiv.innerHTML = `
+					<div id = "statsDiv">
+						<table id = "simpleStatsTable"> 
+							<h3>Simplified Amazon Stats</h3>
+							<form id="weightConverter">
+								Weight in OZ: <input type="number" id="ouncesInput" placeholder="oz"></input> Weight in Pounds: <input type="number" id="poundsOutput" placeholder="lbs" readonly></input>
+							</form>
+						</table> 
+					</div>
+					<hr>`;
+				}
+
+				
 
 				var simpleStatsTable = document.getElementById("simpleStatsTable");
 				// Add key listener for automatic weight conversions
