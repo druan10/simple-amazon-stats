@@ -27,12 +27,7 @@ chrome.extension.sendMessage({}, function (response) {
 			// Flags
 			var areDimensionsFound = false;
 			var isWeightFound = false;
-			/**
-			 * These variables aren't used yet
-			
-			var asinMergeCheck;
-			var productAsins = [];
-			*/
+
 			main();
 
 			// ----------------------------------------------------------
@@ -273,6 +268,53 @@ chrome.extension.sendMessage({}, function (response) {
 				}
 			}
 
-		}
+			/**
+			 * Attempts to copy the passed text string to the user's clipboard
+			 * @param {String} text 
+			 */
+			function copyToClipboard(text) {
+
+				try {
+					var successful = document.execCommand('copy');
+					var msg = successful ? 'successful' : 'unsuccessful';
+					console.log('Copying text command was ' + msg);
+				} catch (err) {
+					console.log('Oops, unable to copy');
+				}
+			}
+
+			/**
+			 * Searches for important keywords relevant to the asin review process
+			 * @param {String Array} classes - Array of classes whose included divs we're searching through 
+			 * @param {String Array} keywords - Array of keywords to search for
+			 */
+			function findKeywords(classes, keywords) {
+				var i;
+				var k;
+				var matches = [];
+				var divText;
+				var divs = [];
+				
+				for (i = 0; i < classes.length; i++) {
+					for (k = 0; k < keywords.length; k++) {
+						// get list of divs
+						divs = Document.getElementsByClassName(divs[i]);
+						// get div text
+
+						divText = Document.getElementsByClassName((classes[i])).innerText; 
+						// search for text
+						if (divText.search(keywords[k])) {
+							matches.push(keywords[k]);
+							break;
+						}
+						// tag result location with a span tag and id so we can jump to it later 
+						// append results to matches
+						// return matches
+					}
+				}
+				console.log(matches);
+			}
+			}
+			
 	}, 10);
 });
