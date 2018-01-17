@@ -9,8 +9,17 @@ chrome.extension.sendMessage({}, function (response) {
 			// Initial Setup
 			const OUNCES_PER_POUND = 16;
 			const INJECT_TARGET_DIV_ID = "detail-ilm_div";
-			const ASIN_REGEX = RegExp("(https\:\/\/www.amazon.com\/)(gp|dp)\/product\/(\w){10}"); // REGEX By https://stackoverflow.com/users/205934/jpsimons
+			// const ASIN_REGEX = RegExp("(https\:\/\/www.amazon.com\/)(gp|dp)\/product\/(\w){10}"); // REGEX By https://stackoverflow.com/users/205934/jpsimons
+			const ASIN_REGEX = RegExp(/B[0-9]{2}[0-9A-Z]{7}|[0-9]{9}(X|0-9])/g); // Experimental
 			const NUM_TEST = RegExp(/\d{1,}((\.)\d{1,})?\s/mg);
+
+			var product = {
+				url : "",
+				isGlass : false,
+				isLiquid : false,
+				isRestricted : false,
+				isAsinMerge : false
+			}
 
 			// Product information variables
 			var shippingWeight = 0.01;
@@ -29,9 +38,6 @@ chrome.extension.sendMessage({}, function (response) {
 			var isWeightFound = false;
 
 			main();
-
-			// ----------------------------------------------------------
-			// Functions for scraping and presenting data
 
 			/**
 			 * Checks whether the data divs in the divList exist on the current page
